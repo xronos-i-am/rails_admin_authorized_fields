@@ -1,44 +1,72 @@
 module RailsAdminAuthorizedFields
   module AuthorazedFieldsSection
-    attr_accessor :authorization_rules
-
     def initialize(parent)
-      @authorization_rules = {}
+      @allow_rules, @deny_rules = {}, {}
 
       super(parent)
     end
 
     def authorized_fields(rules)
       rules.each do |fields, rule|
-        fields = [ fields ].flatten
+        fields = [fields].flatten
 
         fields.each do |name|
           name = name.to_sym
-          @authorization_rules[ name ] ||= []
-          @authorization_rules[ name ] << rule
+          @allow_rules[name] ||= []
+          @allow_rules[name] << rule
         end
       end
     end
 
-    def field_authorization_rules( name )
-      return @authorization_rules[ name ] || [] if @authorization_rules.any?
-      return [] if self.parent.nil?
-      parent.field_authorization_rules( name )
+    def unauthorized_fields(rules)
+      rules.each do |fields, rule|
+        fields = [fields].flatten
+
+        fields.each do |name|
+          name = name.to_sym
+          @deny_rules[name] ||= []
+          @deny_rules[name] << rule
+        end
+      end
     end
 
     def visible_fields
       super.select do |field|
         authorized = true
 
-        rules = field.section.field_authorization_rules( field.name )
+        rules = field.section.field_authorization_rules(field.name)
 
-        rules.each do |rule|
-          authorized &= instance_eval( &rule )
+        rules[:allow].each do |rule|
+          authorized &= instance_eval(&rule)
+        end
+
+        rules[:deny].each do |rule|
+          authorized &= !instance_eval(&rule)
         end
 
         authorized
       end
     end
+
+    protected
+  
+      def field_authorization_rules(name)
+        { 
+          allow: extract_rules(name, :allow_rules),
+          deny: extract_rules(name, :deny_rules),
+        }
+      end
+
+      def extract_rules(name, kind, descendant = nil)
+        rules = instance_variable_get(:"@#{kind}")
+
+        return rules[name] || [] if rules.any?
+        return [] if @parent.nil?
+        return [] if self == descendant 
+
+        @parent.extract_rules(name, kind, self)
+      end
+
   end
 end
 
@@ -52,4 +80,3 @@ module RailsAdmin
     end
   end
 end
-

@@ -22,8 +22,8 @@ Just add ```authorized_fields``` section to your model with specified rules:
 
     rails_admin do
       authorized_fields( {
-        [ :enabled, :is_default, :text_slug ] => Proc.new { bindings[:view]._current_user.has_role?( :admin ) },
-        [ :domain ] => Proc.new { !bindings[:view]._current_user.has_role?( :manager ) },
+        [ :enabled, :is_default, :text_slug ] => proc { bindings[:view]._current_user.has_role?( :admin ) },
+        [ :domain ] => proc { !bindings[:view]._current_user.has_role?( :manager ) },
       } )
 
       field :enabled
@@ -32,6 +32,22 @@ Just add ```authorized_fields``` section to your model with specified rules:
       field :is_default
       field :text_slug
     end
+
+You can also use ```unauthorized_fields``` section in opposite of ```authorized_fields```. All rules will be checked.
+
+    rails_admin do
+      unauthorized_fields( {
+        [ :enabled, :is_default, :text_slug ] => proc { bindings[:view]._current_user.has_role?( :manager ) },
+      } )
+
+      field :enabled
+      field :name
+      field :domain
+      field :is_default
+      field :text_slug
+    end
+
+Note: all fields are ```authorized``` by default.
 
 TODO: just a small changes needed to make ```authorized_fields``` section overridable in subsection (list, edit)
 
