@@ -31,6 +31,8 @@ module RailsAdminAuthorizedFields
     end
 
     def visible_fields
+      return super if bindings.nil?
+      
       super.select do |field|
         authorized = true
 
