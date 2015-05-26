@@ -57,14 +57,14 @@ module RailsAdminAuthorizedFields
 
     protected
 
-      def plugin_included?( descendant = nil )
+      def plugin_included?(descendant = nil)
         result = @allow_rules.any? || @deny_rules.any?
 
         return result if result
         return false if @parent.nil?
         return false if self == descendant
 
-        @parent.plugin_included?( self )
+        @parent.plugin_included?(self)
       end
 
       def field_authorization_rules(name)
@@ -77,7 +77,7 @@ module RailsAdminAuthorizedFields
       def extract_rules(name, kind, descendant = nil)
         rules = instance_variable_get(:"@#{kind}")
 
-        return rules[name] || [] if rules.any?
+        return rules[name] || rules[:*] || [] if rules.any?
         return [] if @parent.nil?
         return [] if self == descendant
 
