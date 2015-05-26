@@ -40,7 +40,7 @@ module RailsAdminAuthorizedFields
           authorized = rules[:allow].any? || rules[:deny].any?
 
           unless authorized
-            default_rule = RailsAdminAuthorizedFields::Configuration.default_rule
+            default_rule = RailsAdminAuthorizedFields.config.default_rule
             authorized = instance_eval(&default_rule) if default_rule.is_a?( Proc )
           end
 
