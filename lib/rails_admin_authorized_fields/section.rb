@@ -32,11 +32,12 @@ module RailsAdminAuthorizedFields
 
     def visible_fields
       return super if bindings.nil?
-      
-      super.select do |field|
-        authorized = true
+      return super if @allow_rules.empty? && @deny_rules.empty?
 
+      super.select do |field|
         rules = field.section.field_authorization_rules(field.name)
+
+        authorized = rules[:allow].any? || rules[:deny].any?
 
         rules[:allow].each do |rule|
           authorized &= instance_eval(&rule)
@@ -51,9 +52,9 @@ module RailsAdminAuthorizedFields
     end
 
     protected
-  
+
       def field_authorization_rules(name)
-        { 
+        {
           allow: extract_rules(name, :allow_rules),
           deny: extract_rules(name, :deny_rules),
         }
@@ -64,7 +65,7 @@ module RailsAdminAuthorizedFields
 
         return rules[name] || [] if rules.any?
         return [] if @parent.nil?
-        return [] if self == descendant 
+        return [] if self == descendant
 
         @parent.extract_rules(name, kind, self)
       end

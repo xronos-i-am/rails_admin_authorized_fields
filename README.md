@@ -47,9 +47,13 @@ You can also use ```unauthorized_fields``` section in opposite of ```authorized_
       field :text_slug
     end
 
-Note: all fields are ```authorized``` by default.
+Note: all fields are not ```authorized``` by default if any rules present.
 
 TODO: just a small changes needed to make ```authorized_fields``` section overridable in subsection (list, edit)
+
+## Changelog
+
+  0.1.0 - changed default authorized logic. In 0.0.3 all fields were authorized by default. In 0.1.0 fields unauthorized when authorized_fields or unauthorized_fields sections are present.
 
 ## Contributing
 
