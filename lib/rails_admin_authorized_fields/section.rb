@@ -39,6 +39,11 @@ module RailsAdminAuthorizedFields
         if field.section.plugin_included?
           authorized = rules[:allow].any? || rules[:deny].any?
 
+          unless authorized
+            default_rule = RailsAdminAuthorizedFields::Configuration.default_rule
+            authorized = instance_eval(&default_rule) if default_rule.is_a?( Proc )
+          end
+
           rules[:allow].each do |rule|
             authorized &= instance_eval(&rule)
           end
@@ -77,11 +82,7 @@ module RailsAdminAuthorizedFields
       def extract_rules(name, kind, descendant = nil)
         rules = instance_variable_get(:"@#{kind}")
 
-        if rules.any?
-          field_rules = (rules[name] || []) + (rules[:*] || [])
-          return field_rules
-        end
-
+        return rules[name] || [] if rules.any?
         return [] if @parent.nil?
         return [] if self == descendant
 
