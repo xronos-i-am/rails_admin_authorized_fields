@@ -77,7 +77,11 @@ module RailsAdminAuthorizedFields
       def extract_rules(name, kind, descendant = nil)
         rules = instance_variable_get(:"@#{kind}")
 
-        return rules[name] || rules[:*] || [] if rules.any?
+        if rules.any?
+          field_rules = (rules[name] || []) + (rules[:*] || [])
+          return field_rules
+        end
+
         return [] if @parent.nil?
         return [] if self == descendant
 
