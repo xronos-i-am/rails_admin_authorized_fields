@@ -1,5 +1,5 @@
 module RailsAdminAuthorizedFields
-  module AuthorazedFieldsSection
+  module AuthorizedFieldsSection
     def initialize(parent)
       @allow_rules, @deny_rules = {}, {}
 
@@ -32,19 +32,23 @@ module RailsAdminAuthorizedFields
 
     def visible_fields
       return super if bindings.nil?
-      return super if @allow_rules.empty? && @deny_rules.empty?
 
       super.select do |field|
         rules = field.section.field_authorization_rules(field.name)
 
-        authorized = rules[:allow].any? || rules[:deny].any?
+        if field.section.plugin_included?
+          authorized = rules[:allow].any? || rules[:deny].any?
 
-        rules[:allow].each do |rule|
-          authorized &= instance_eval(&rule)
-        end
+          rules[:allow].each do |rule|
+            authorized &= instance_eval(&rule)
+          end
 
-        rules[:deny].each do |rule|
-          authorized &= !instance_eval(&rule)
+          rules[:deny].each do |rule|
+            authorized &= !instance_eval(&rule)
+          end
+
+        else
+          authorized = true
         end
 
         authorized
@@ -52,6 +56,16 @@ module RailsAdminAuthorizedFields
     end
 
     protected
+
+      def plugin_included?( descendant = nil )
+        result = @allow_rules.any? || @deny_rules.any?
+
+        return result if result
+        return false if @parent.nil?
+        return false if self == descendant
+
+        @parent.plugin_included?( self )
+      end
 
       def field_authorization_rules(name)
         {
@@ -78,7 +92,7 @@ module RailsAdmin
     module Sections
       # Configuration of the show view for a new object
       class Base
-        prepend RailsAdminAuthorizedFields::AuthorazedFieldsSection
+        prepend RailsAdminAuthorizedFields::AuthorizedFieldsSection
       end
     end
   end
